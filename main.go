@@ -12,23 +12,6 @@ import (
 // define the database connection
 var db *gorm.DB
 
-//func init() {
-//	// connect to the database
-//	dsn := "root:Pastibisa@tcp(localhost:3306)/pr_ramadhan"
-//	// charset=utf8mb4&parseTime=True&loc=Local
-//	var err error
-//	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-//	if err != nil {
-//		panic("failed to connect to database")
-//	}
-//
-//	// run auto migration to create the table
-//	err = db.AutoMigrate(&models.Wiki{})
-//	if err != nil {
-//		panic("failed to migrate database")
-//	}
-//}
-
 // createCmd represents the `create` command
 var createCmd = &cobra.Command{
 	Use:   "create",

@@ -1,18 +1,28 @@
 package database
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
+	"pr_ramadhan/models"
 	"time"
 )
 
-func ConnnectDb() (*gorm.DB, error) {
+func ConnnectDb(cfg *models.Config) (*gorm.DB, error) {
 
-	dsn := "root:Pastibisa@tcp(localhost:3306)/pr_ramadhan"
+	fmt.Printf("%+v\n", cfg)
+	//
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+		cfg.DBUsername,
+		cfg.DBPassword,
+		cfg.DBHost,
+		cfg.DBPort,
+		cfg.DBName,
+	)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.New(
