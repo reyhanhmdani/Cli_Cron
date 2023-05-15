@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
+	"log"
+	"pr_ramadhan/database"
 	"pr_ramadhan/models"
 	"time"
 )
 
 // define the database connection
-var db *gorm.DB
 
 // createCmd represents the `create` command
 var createCmd = &cobra.Command{
@@ -27,6 +28,21 @@ var createCmd = &cobra.Command{
 			return
 		}
 
+		// create a new Config instance with your desired configurations
+		config := models.Config{
+			// Add your configuration fields here
+		}
+
+		err1 := envconfig.Process("", &config)
+		if err1 != nil {
+			log.Fatal("error", err1)
+		}
+		// connect to the database
+		db, err := database.ConnnectDb(&config)
+		if err != nil {
+			fmt.Println("Failed to connect to database")
+			return
+		}
 		// create a new Wiki instance with the topic and timestamps
 		now := time.Now()
 		wiki := models.Wiki{

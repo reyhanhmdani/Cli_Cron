@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	//"pr_ramadhan/database"
 	"pr_ramadhan/models"
 )
 
@@ -15,7 +16,6 @@ func NewWikiHandlerImpl(cfg *models.Config) *WikiHandler {
 }
 
 func (h *WikiHandler) Create() error {
-	//db, err := database.ConnnectDb(h.cfg)
 
 	return nil
 }
