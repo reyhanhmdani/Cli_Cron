@@ -2,18 +2,12 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/go-co-op/gocron"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
-	"io"
 	"net/http"
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
 	"strconv"
-	"sync"
-	"time"
 )
 
 // struct ini untuk melakukan scarping paragraf pertama dari Wiki
@@ -36,11 +30,11 @@ func CreateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 		}
 
 		// create a new Wiki instance with the topic and timestamps
-		now := time.Now()
+		//now := time.Now()
 		wiki := models.Wikis{
-			Topic:     topic,
-			CreatedAt: now.Format(time.DateTime),
-			UpdatedAt: now.Format(time.DateTime),
+			Topic: topic,
+			//CreatedAt: now.Format(time.DateTime),
+			//UpdatedAt: now.Format(time.DateTime),
 		}
 
 		// save the new wiki entry to the database
@@ -173,76 +167,76 @@ func DeleteWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func ScrapeDescription(db *gorm.DB) {
-	// Query seluruh data dengan deskripsi kosong
-	var wikis []models.Wikis
-	db.Where("description IS NULL").Find(&wikis)
+//func ScrapeDescription(db *gorm.DB) {
+//	// Query seluruh data dengan deskripsi kosong
+//	var wikis []models.Wikis
+//	db.Where("description IS NULL").Find(&wikis)
+//
+//	// Buat HTTP client
+//	client := http.DefaultClient
+//
+//	// Lakukan scraping dan update deskripsi secara koncurrent
+//	var wg sync.WaitGroup
+//	for _, wiki := range wikis {
+//		wg.Add(1)
+//		go func(wiki models.Wikis) {
+//			defer wg.Done()
+//
+//			// Buat URL Wikipedia berdasarkan topik
+//			url := fmt.Sprintf("https://id.wikipedia.org/wiki/%s", wiki.Topic)
+//
+//			// Lakukan request HTTP
+//			resp, err := client.Get(url)
+//			if err != nil {
+//				fmt.Printf("Failed to scrape %s: %s\n", wiki.Topic, err.Error())
+//				return
+//			}
+//			defer func(Body io.ReadCloser) {
+//				err := Body.Close()
+//				if err != nil {
+//
+//				}
+//			}(resp.Body)
+//
+//			// Baca body response menggunakan goquery
+//			doc, err := goquery.NewDocumentFromReader(resp.Body)
+//			if err != nil {
+//				fmt.Printf("Failed to parse response body for %s: %s\n", wiki.Topic, err.Error())
+//				return
+//			}
+//
+//			// Ambil paragraf pertama dari body
+//			paragraph := doc.Find("p").First().Text()
+//
+//			// Update deskripsi dan kolom updated_at pada tabel wikis
+//			wiki.Description = paragraph
+//			now := time.Now()
+//			wiki.UpdatedAt = now.Format(time.DateTime)
+//			if err := db.Save(&wiki).Error; err != nil {
+//				fmt.Printf("Failed to update description for %s: %s\n", wiki.Topic, err.Error())
+//				return
+//			}
+//
+//			fmt.Printf("Description updated for %s\n", wiki.Topic)
+//		}(wiki)
+//	}
+//
+//	// Tunggu hingga semua scraping dan update selesai
+//	wg.Wait()
+//}
 
-	// Buat HTTP client
-	client := http.DefaultClient
-
-	// Lakukan scraping dan update deskripsi secara koncurrent
-	var wg sync.WaitGroup
-	for _, wiki := range wikis {
-		wg.Add(1)
-		go func(wiki models.Wikis) {
-			defer wg.Done()
-
-			// Buat URL Wikipedia berdasarkan topik
-			url := fmt.Sprintf("https://id.wikipedia.org/wiki/%s", wiki.Topic)
-
-			// Lakukan request HTTP
-			resp, err := client.Get(url)
-			if err != nil {
-				fmt.Printf("Failed to scrape %s: %s\n", wiki.Topic, err.Error())
-				return
-			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-
-				}
-			}(resp.Body)
-
-			// Baca body response menggunakan goquery
-			doc, err := goquery.NewDocumentFromReader(resp.Body)
-			if err != nil {
-				fmt.Printf("Failed to parse response body for %s: %s\n", wiki.Topic, err.Error())
-				return
-			}
-
-			// Ambil paragraf pertama dari body
-			paragraph := doc.Find("p").First().Text()
-
-			// Update deskripsi dan kolom updated_at pada tabel wikis
-			wiki.Description = paragraph
-			now := time.Now()
-			wiki.UpdatedAt = now.Format(time.DateTime)
-			if err := db.Save(&wiki).Error; err != nil {
-				fmt.Printf("Failed to update description for %s: %s\n", wiki.Topic, err.Error())
-				return
-			}
-
-			fmt.Printf("Description updated for %s\n", wiki.Topic)
-		}(wiki)
-	}
-
-	// Tunggu hingga semua scraping dan update selesai
-	wg.Wait()
-}
-
-func StartWorker(db *gorm.DB) {
-	// Buat scheduler dengan interval 1 menit
-	s := gocron.NewScheduler(time.UTC)
-	_, err := s.Every(1).Minute().Do(func() {
-		ScrapeDescription(db)
-	})
-	if err != nil {
-		fmt.Println("Failed to schedule worker:", err.Error())
-		return
-	}
-
-	// Jalankan scheduler
-	s.StartAsync()
-	fmt.Println("Worker started")
-}
+//func StartWorker(db *gorm.DB) {
+//	// Buat scheduler dengan interval 1 menit
+//	s := gocron.NewScheduler(time.UTC)
+//	_, err := s.Every(1).Minute().Do(func() {
+//		ScrapeDescription(db)
+//	})
+//	if err != nil {
+//		fmt.Println("Failed to schedule worker:", err.Error())
+//		return
+//	}
+//
+//	// Jalankan scheduler
+//	s.StartAsync()
+//	fmt.Println("Worker started")
+//}

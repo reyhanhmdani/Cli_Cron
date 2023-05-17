@@ -4,7 +4,6 @@ import (
 	"gorm.io/gorm"
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
-	"time"
 )
 
 type wikiRepository struct {
@@ -32,12 +31,5 @@ func (w *wikiRepository) GetWiki(id uint) (*models.Wikis, error) {
 	if err := w.db.First(&wiki, id).Error; err != nil {
 		return nil, err
 	}
-
-	createdAt, err := time.Parse(time.RFC3339, wiki.CreatedAt)
-	if err != nil {
-		return nil, err
-	}
-
-	wiki.CreatedAt = createdAt.Format(time.RFC3339)
 	return &wiki, nil
 }
