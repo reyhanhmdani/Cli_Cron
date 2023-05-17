@@ -2,17 +2,20 @@ package database
 
 import (
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
+	mysqlMigration "github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
-	models2 "pr_ramadhan/cmd/models"
+	"pr_ramadhan/cmd/models"
 	"time"
 )
 
-func ConnnectDb(cfg *models2.Config) (*gorm.DB, error) {
+func ConnnectDb(cfg *models.Config) (*gorm.DB, error) {
 
 	fmt.Printf("%+v\n", cfg)
 	//
@@ -38,11 +41,40 @@ func ConnnectDb(cfg *models2.Config) (*gorm.DB, error) {
 		panic("Cannot Connect to Database")
 	}
 
-	err = db.AutoMigrate(&models2.Wikis{})
-	if err != nil {
-		return nil, err
-	}
+	//err = db.AutoMigrate(&models2.Wikis{})
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	logrus.Info("Success Connect to Database")
 	return db, err
+}
+
+func Migrate(db *gorm.DB) error {
+	logrus.Info("running database migration")
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	driver, err := mysqlMigration.WithInstance(sqlDB, &mysqlMigration.Config{})
+	if err != nil {
+		return err
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://migration",
+		"mysql", driver)
+	if err != nil {
+		return err
+	}
+
+	err = m.Up()
+	if err != nil && err == migrate.ErrNoChange {
+		logrus.Info("No schema changes to apply")
+		return nil
+	}
+
+	return err
 }

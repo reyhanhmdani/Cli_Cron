@@ -22,14 +22,15 @@ func (w *wikiRepository) UpdateWiki(wiki *models.Wikis) error {
 	return w.db.Save(wiki).Error
 }
 
-func (w *wikiRepository) DeleteWiki(id uint) error {
+func (w *wikiRepository) DeleteWiki(id int) error {
 	return w.db.Delete(&models.Wikis{}, id).Error
 }
 
-func (w *wikiRepository) GetWiki(id uint) (*models.Wikis, error) {
-	var wiki models.Wikis
-	if err := w.db.First(&wiki, id).Error; err != nil {
+func (w *wikiRepository) GetWiki(id int) (*models.Wikis, error) {
+	wiki := &models.Wikis{}
+	err := w.db.First(wiki, id).Error
+	if err != nil {
 		return nil, err
 	}
-	return &wiki, nil
+	return wiki, nil
 }

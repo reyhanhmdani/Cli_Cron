@@ -8,6 +8,7 @@ import (
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
 	"strconv"
+	"time"
 )
 
 // struct ini untuk melakukan scarping paragraf pertama dari Wiki
@@ -17,9 +18,8 @@ type Scrapper struct {
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 func CreateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
-
 	return func(cmd *cobra.Command, args []string) {
-		// meminta pengguna untuk menentukan topik
+		// Meminta pengguna untuk menentukan topik
 		prompt := promptui.Prompt{
 			Label: "Topic",
 		}
@@ -29,29 +29,30 @@ func CreateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 			return
 		}
 
-		// create a new Wiki instance with the topic and timestamps
-		//now := time.Now()
+		// Membuat instance Wiki baru dengan topik dan timestamp
+		now := time.Now()
 		wiki := models.Wikis{
-			Topic: topic,
-			//CreatedAt: now.Format(time.DateTime),
-			//UpdatedAt: now.Format(time.DateTime),
+			Topic:       topic,
+			CreatedAt:   now.Format("2006-01-02 15:04:05"),
+			UpdatedAt:   now.Format("2006-01-02 15:04:05"),
+			Description: "",
 		}
 
-		// save the new wiki entry to the database
+		// Menyimpan entri wiki baru ke database
 		err = repo.AddWiki(&wiki)
 		if err != nil {
 			fmt.Println("Failed to save data to database")
 			return
 		}
 
-		// print a success message
-		fmt.Println("Wiki terbaru di buat dengan ID", wiki.ID)
+		// Menampilkan pesan sukses
+		fmt.Println("Wiki terbaru dibuat dengan ID", wiki.ID)
 	}
 }
 
 func UpdateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		// meminta pengguna untuk memasukkan ID wiki yang akan diperbarui
+		// Meminta pengguna untuk memasukkan ID wiki yang akan diupdate
 		prompt := promptui.Prompt{
 			Label: "Wiki ID",
 		}
@@ -61,38 +62,41 @@ func UpdateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 			return
 		}
 
-		// mengkonversi ID menjadi tipe uint
-		id, err := strconv.ParseUint(idStr, 10, 32)
+		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			fmt.Println("Invalid ID")
 			return
 		}
 
-		// meminta pengguna untuk memasukkan topik baru
-		topicPrompt := promptui.Prompt{
+		// Meminta pengguna untuk memasukkan topik yang baru
+		prompt = promptui.Prompt{
 			Label: "New Topic",
 		}
-		newTopic, err := topicPrompt.Run()
+		newTopic, err := prompt.Run()
 		if err != nil {
 			fmt.Println("Failed to read input")
 			return
 		}
 
-		// membangun objek Wiki yang akan diperbarui
-		wiki := &models.Wikis{
-			ID:    uint(id),
-			Topic: newTopic,
-		}
-
-		// memanggil fungsi UpdateWiki pada repository
-		err = repo.UpdateWiki(wiki)
+		// Mengambil data wiki berdasarkan ID
+		wiki, err := repo.GetWiki(id)
 		if err != nil {
-			fmt.Println("Failed to update wiki")
+			fmt.Println("Failed to get data from database")
 			return
 		}
 
-		// print a success message
-		fmt.Println("Wiki with ID", id, "has been updated")
+		// Mengupdate topik wiki
+		wiki.Topic = newTopic
+
+		// Menyimpan perubahan ke database
+		err = repo.UpdateWiki(wiki)
+		if err != nil {
+			fmt.Println("Failed to update data in database")
+			return
+		}
+
+		// Menampilkan pesan sukses
+		fmt.Println("Topic wiki dengan ID", id, "berhasil diupdate")
 	}
 }
 
@@ -100,40 +104,51 @@ func GetWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args 
 	return func(cmd *cobra.Command, args []string) {
 		// meminta pengguna untuk memasukkan ID wiki
 		prompt := promptui.Prompt{
-			Label: "Wiki ID",
+			Label: "Enter Wiki ID",
 		}
-		idStr, err := prompt.Run()
+		inputID, err := prompt.Run()
 		if err != nil {
 			fmt.Println("Failed to read input")
 			return
 		}
 
-		// mengkonversi ID menjadi tipe uint
-		id, err := strconv.ParseUint(idStr, 10, 32)
+		// konversi ID ke tipe int
+		id, err := strconv.Atoi(inputID)
 		if err != nil {
-			fmt.Println("Invalid ID")
+			fmt.Println("Invalid Wiki ID")
 			return
 		}
 
-		// memanggil fungsi GetWiki pada repository
-		wiki, err := repo.GetWiki(uint(id))
+		// dapatkan wiki dari repository
+		wiki, err := repo.GetWiki(id)
 		if err != nil {
-			fmt.Println("Failed to get wiki from database / Not Found")
+			fmt.Println("Failed to get wiki from database")
+			return
+		}
+		createdAt, err := time.Parse("2006-01-02 15:04:05", wiki.CreatedAt)
+		if err != nil {
+			fmt.Println("Failed to parse created_at")
 			return
 		}
 
-		// menampilkan hasil
-		fmt.Println("Wiki ID:", wiki.ID)
+		updatedAt, err := time.Parse("2006-01-02 15:04:05", wiki.UpdatedAt)
+		if err != nil {
+			fmt.Println("Failed to parse updated_at")
+			return
+		}
+
+		// tampilkan hasil pencarian ke pengguna
+		fmt.Println("ID:", wiki.ID)
 		fmt.Println("Topic:", wiki.Topic)
 		fmt.Println("Description:", wiki.Description)
-		fmt.Println("Created At:", wiki.CreatedAt)
-		fmt.Println("Updated At:", wiki.UpdatedAt)
+		fmt.Println("Created At:", createdAt)
+		fmt.Println("Updated At:", updatedAt)
 	}
 }
 
 func DeleteWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		// meminta pengguna untuk memasukkan ID wiki yang akan dihapus
+		// Meminta pengguna untuk memasukkan ID wiki yang akan dihapus
 		prompt := promptui.Prompt{
 			Label: "Wiki ID",
 		}
@@ -143,22 +158,21 @@ func DeleteWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 			return
 		}
 
-		// mengkonversi ID menjadi tipe uint
-		id, err := strconv.ParseUint(idStr, 10, 32)
+		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			fmt.Println("Invalid ID")
 			return
 		}
 
-		// memanggil fungsi DeleteWiki pada repository
-		err = repo.DeleteWiki(uint(id))
+		// Menghapus wiki dari database
+		err = repo.DeleteWiki(id)
 		if err != nil {
-			fmt.Println("Failed to delete wiki from database")
+			fmt.Println("Failed to delete data from database")
 			return
 		}
 
-		// print a success message
-		fmt.Println("Wiki with ID", id, "has been deleted")
+		// Menampilkan pesan sukses
+		fmt.Println("Wiki dengan ID", id, "telah dihapus")
 	}
 }
 

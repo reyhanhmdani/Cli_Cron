@@ -33,6 +33,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = database2.Migrate(Db)
+	if err != nil {
+		log.Fatalf("Error running schema migration %v", err)
+	}
+
 	// createCmd represents the `create` command
 	var createCmd = &cobra.Command{
 		Use:   "create",

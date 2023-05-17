@@ -7,6 +7,6 @@ import (
 type WikiRepository interface {
 	AddWiki(wiki *models.Wikis) error
 	UpdateWiki(wiki *models.Wikis) error
-	DeleteWiki(id uint) error
-	GetWiki(id uint) (*models.Wikis, error)
+	DeleteWiki(id int) error
+	GetWiki(id int) (*models.Wikis, error)
 }
