@@ -40,7 +40,28 @@ func main() {
 		Run:   handlers.CreateWikiHandler(database.NewWikiRepository(Db)),
 	}
 
+	var updateCmd = &cobra.Command{
+		Use:   "update",
+		Short: "Udpate a wiki By Id",
+		Run:   handlers.UpdateWikiHandler(database.NewWikiRepository(Db)),
+	}
+
+	var getCmd = &cobra.Command{
+		Use:   "get",
+		Short: "Get a wiki By Id",
+		Run:   handlers.GetWikiHandler(database.NewWikiRepository(Db)),
+	}
+
+	var deleteCmd = &cobra.Command{
+		Use:   "delete",
+		Short: "Delete a Wiki By Id",
+		Run:   handlers.DeleteWikiHandler(database.NewWikiRepository(Db)),
+	}
+
 	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(deleteCmd)
 
 	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {

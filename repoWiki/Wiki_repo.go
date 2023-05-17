@@ -3,8 +3,8 @@ package repoWiki
 import "pr_ramadhan/models"
 
 type WikiRepository interface {
-	AddWiki(wiki *models.Wiki) error
-	UpdateWiki(wiki *models.Wiki) error
+	AddWiki(wiki *models.Wikis) error
+	UpdateWiki(wiki *models.Wikis) error
 	DeleteWiki(id uint) error
-	GetWiki(id uint) (*models.Wiki, error)
+	GetWiki(id uint) (*models.Wikis, error)
 }
