@@ -2,7 +2,7 @@ package database
 
 import (
 	"gorm.io/gorm"
-	"pr_ramadhan/models"
+	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
 	"time"
 )

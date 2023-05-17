@@ -6,9 +6,9 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	"log"
-	"pr_ramadhan/database"
-	"pr_ramadhan/handlers"
-	"pr_ramadhan/models"
+	database2 "pr_ramadhan/cmd/database"
+	"pr_ramadhan/cmd/handlers"
+	"pr_ramadhan/cmd/models"
 )
 
 var rootCmd = &cobra.Command{Use: "app"}
@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// INITAL DATABASE
-	Db, err := database.ConnnectDb(&cfg)
+	Db, err := database2.ConnnectDb(&cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,31 +37,40 @@ func main() {
 	var createCmd = &cobra.Command{
 		Use:   "create",
 		Short: "Create a new wiki entry",
-		Run:   handlers.CreateWikiHandler(database.NewWikiRepository(Db)),
+		Run:   handlers.CreateWikiHandler(database2.NewWikiRepository(Db)),
 	}
 
 	var updateCmd = &cobra.Command{
 		Use:   "update",
-		Short: "Udpate a wiki By Id",
-		Run:   handlers.UpdateWikiHandler(database.NewWikiRepository(Db)),
+		Short: "Update a wiki By Id",
+		Run:   handlers.UpdateWikiHandler(database2.NewWikiRepository(Db)),
 	}
 
 	var getCmd = &cobra.Command{
 		Use:   "get",
 		Short: "Get a wiki By Id",
-		Run:   handlers.GetWikiHandler(database.NewWikiRepository(Db)),
+		Run:   handlers.GetWikiHandler(database2.NewWikiRepository(Db)),
 	}
 
 	var deleteCmd = &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a Wiki By Id",
-		Run:   handlers.DeleteWikiHandler(database.NewWikiRepository(Db)),
+		Run:   handlers.DeleteWikiHandler(database2.NewWikiRepository(Db)),
 	}
+
+	//handlers.StartWorker(Db)
+
+	//var workerCmd = &cobra.Command{
+	//	Use:   "worker",
+	//	Short: "Run the worker for scraping",
+	//	Run:   handlers.StartWorker(Db),
+	//}
 
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(deleteCmd)
+	//rootCmd.AddCommand(workerCmd)
 
 	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {

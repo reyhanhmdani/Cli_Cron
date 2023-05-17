@@ -8,11 +8,11 @@ import (
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
-	"pr_ramadhan/models"
+	models2 "pr_ramadhan/cmd/models"
 	"time"
 )
 
-func ConnnectDb(cfg *models.Config) (*gorm.DB, error) {
+func ConnnectDb(cfg *models2.Config) (*gorm.DB, error) {
 
 	fmt.Printf("%+v\n", cfg)
 	//
@@ -38,7 +38,7 @@ func ConnnectDb(cfg *models.Config) (*gorm.DB, error) {
 		panic("Cannot Connect to Database")
 	}
 
-	err = db.AutoMigrate(&models.Wikis{})
+	err = db.AutoMigrate(&models2.Wikis{})
 	if err != nil {
 		return nil, err
 	}

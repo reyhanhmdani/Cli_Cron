@@ -1,6 +1,8 @@
 package repoWiki
 
-import "pr_ramadhan/models"
+import (
+	"pr_ramadhan/cmd/models"
+)
 
 type WikiRepository interface {
 	AddWiki(wiki *models.Wikis) error
