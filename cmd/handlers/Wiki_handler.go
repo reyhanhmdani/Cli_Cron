@@ -2,12 +2,16 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/go-co-op/gocron"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"net/http"
+	"net/url"
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -89,7 +93,7 @@ func UpdateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 		wiki.Topic = newTopic
 
 		// Menyimpan perubahan ke database
-		err = repo.UpdateWiki(wiki)
+		err = repo.UpdateTopic(wiki)
 		if err != nil {
 			fmt.Println("Failed to update data in database")
 			return
@@ -181,76 +185,150 @@ func DeleteWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//func ScrapeDescription(db *gorm.DB) {
-//	// Query seluruh data dengan deskripsi kosong
-//	var wikis []models.Wikis
-//	db.Where("description IS NULL").Find(&wikis)
-//
-//	// Buat HTTP client
-//	client := http.DefaultClient
-//
-//	// Lakukan scraping dan update deskripsi secara koncurrent
-//	var wg sync.WaitGroup
-//	for _, wiki := range wikis {
-//		wg.Add(1)
-//		go func(wiki models.Wikis) {
-//			defer wg.Done()
-//
-//			// Buat URL Wikipedia berdasarkan topik
-//			url := fmt.Sprintf("https://id.wikipedia.org/wiki/%s", wiki.Topic)
-//
-//			// Lakukan request HTTP
-//			resp, err := client.Get(url)
-//			if err != nil {
-//				fmt.Printf("Failed to scrape %s: %s\n", wiki.Topic, err.Error())
-//				return
-//			}
-//			defer func(Body io.ReadCloser) {
-//				err := Body.Close()
-//				if err != nil {
-//
-//				}
-//			}(resp.Body)
-//
-//			// Baca body response menggunakan goquery
-//			doc, err := goquery.NewDocumentFromReader(resp.Body)
-//			if err != nil {
-//				fmt.Printf("Failed to parse response body for %s: %s\n", wiki.Topic, err.Error())
-//				return
-//			}
-//
-//			// Ambil paragraf pertama dari body
-//			paragraph := doc.Find("p").First().Text()
-//
-//			// Update deskripsi dan kolom updated_at pada tabel wikis
-//			wiki.Description = paragraph
-//			now := time.Now()
-//			wiki.UpdatedAt = now.Format(time.DateTime)
-//			if err := db.Save(&wiki).Error; err != nil {
-//				fmt.Printf("Failed to update description for %s: %s\n", wiki.Topic, err.Error())
-//				return
-//			}
-//
-//			fmt.Printf("Description updated for %s\n", wiki.Topic)
-//		}(wiki)
-//	}
-//
-//	// Tunggu hingga semua scraping dan update selesai
-//	wg.Wait()
-//}
+func UpdateTopicHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		// Meminta pengguna untuk memasukkan ID topik yang akan diupdate
+		prompt := promptui.Prompt{
+			Label: "Enter the ID of the topic you want to update:",
+		}
+		idStr, err := prompt.Run()
+		if err != nil {
+			fmt.Println("Failed to read input")
+			return
+		}
 
-//func StartWorker(db *gorm.DB) {
-//	// Buat scheduler dengan interval 1 menit
-//	s := gocron.NewScheduler(time.UTC)
-//	_, err := s.Every(1).Minute().Do(func() {
-//		ScrapeDescription(db)
-//	})
-//	if err != nil {
-//		fmt.Println("Failed to schedule worker:", err.Error())
-//		return
-//	}
-//
-//	// Jalankan scheduler
-//	s.StartAsync()
-//	fmt.Println("Worker started")
-//}
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			fmt.Println("Invalid ID")
+			return
+		}
+
+		// Meminta pengguna untuk memasukkan topik baru
+		prompt = promptui.Prompt{
+			Label: "Enter the new topic",
+		}
+		newTopic, err := prompt.Run()
+		if err != nil {
+			fmt.Println("Failed to read input")
+			return
+		}
+
+		// Mengupdate topik
+		err = repo.UpdateTopic1(id, newTopic)
+		if err != nil {
+			fmt.Println("Failed to update topic")
+			return
+		}
+
+		// Mengambil paragraf pertama dari Wikipedia
+		doc, err := goquery.NewDocument("https://id.wikipedia.org/wiki/" + newTopic)
+		if err != nil {
+			fmt.Println("Failed to fetch data from Wikipedia")
+			return
+		}
+
+		description := doc.Find("p").First().Text()
+
+		// Mengupdate deskripsi dan kolom updated_at
+		err = repo.UpdateDescriptionAndUpdatedAt(id, description)
+		if err != nil {
+			fmt.Println("Failed to update description and updated_at")
+			return
+		}
+
+		fmt.Println("Topic and description have been updated")
+	}
+}
+
+func WorkerHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		// Menjadwalkan tugas yang akan dijalankan setiap 1 menit
+		s := gocron.NewScheduler(time.UTC)
+		_, err := s.Every(1).Minute().Do(func() {
+			// Mengambil data wiki dengan description kosong dari database
+			wikis, err := repo.GetWikisWithEmptyDescription()
+			if err != nil {
+				fmt.Println("Failed to get data from database")
+				return
+			}
+
+			// Concurrently melakukan http request dan update ke database
+			var wg sync.WaitGroup
+			for _, wiki := range wikis {
+				wg.Add(1)
+				go func(wiki *models.Wikis) {
+					defer wg.Done()
+
+					// Mengakses Wikipedia untuk mendapatkan paragraf pertama
+					paragraph, err := fetchFirstParagraph(wiki.Topic)
+					if err != nil {
+						fmt.Println("Failed to fetch first paragraph:", err)
+						return
+					}
+
+					// Update description dan updated_at di database
+					wiki.Description = paragraph
+					wiki.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
+					err = repo.UpdateTopic(wiki)
+					if err != nil {
+						fmt.Println("Failed to update data in database")
+						return
+					}
+
+					// Menampilkan pesan sukses
+					fmt.Println("Description for topic", wiki.Topic, "has been updated")
+
+					// cek jika semua deskripsi sudah terisi
+					if isAllDescriptionsFilled(repo) {
+						fmt.Println("Semua deskripsi sudah terisi")
+						// menghentikan scheduler nya
+						s.Stop()
+					}
+				}(wiki)
+			}
+
+			wg.Wait()
+		})
+		if err != nil {
+			return
+		}
+
+		// Menjalankan scheduler
+		s.StartBlocking()
+	}
+}
+
+// Fungsi untuk mengambil paragraf pertama dari Wikipedia
+func fetchFirstParagraph(topic string) (string, error) {
+	nameUrl := "https://id.wikipedia.org/wiki/" + url.PathEscape(topic)
+	resp, err := http.Get(nameUrl)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	paragraph := ""
+	doc.Find("p").Each(func(i int, s *goquery.Selection) {
+		if i == 0 {
+			paragraph = s.Text()
+			return
+		}
+	})
+
+	return paragraph, nil
+}
+
+// Fungsi untuk memeriksa apakah semua deskripsi telah terisi
+func isAllDescriptionsFilled(repo repoWiki.WikiRepository) bool {
+	wikis, err := repo.GetWikisWithEmptyDescription()
+	if err != nil {
+		fmt.Println("Failed to get data from database")
+		return false
+	}
+	return len(wikis) == 0
+}

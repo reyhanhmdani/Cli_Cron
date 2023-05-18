@@ -65,17 +65,24 @@ func main() {
 
 	//handlers.StartWorker(Db)
 
-	//var workerCmd = &cobra.Command{
-	//	Use:   "worker",
-	//	Short: "Run the worker for scraping",
-	//	Run:   handlers.StartWorker(Db),
-	//}
+	var workerCmd = &cobra.Command{
+		Use:   "worker",
+		Short: "Run the worker for scraping",
+		Run:   handlers.WorkerHandler(database2.NewWikiRepository(Db)),
+	}
+
+	var updateDescByTopic = &cobra.Command{
+		Use:   "UDBT",
+		Short: "Run the Worker for Updating",
+		Run:   handlers.UpdateTopicHandler(database2.NewWikiRepository(Db)),
+	}
 
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(deleteCmd)
-	//rootCmd.AddCommand(workerCmd)
+	rootCmd.AddCommand(workerCmd)
+	rootCmd.AddCommand(updateDescByTopic)
 
 	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {
