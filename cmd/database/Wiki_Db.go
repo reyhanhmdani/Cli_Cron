@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/PuerkitoBio/goquery"
 	"gorm.io/gorm"
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
@@ -15,11 +16,20 @@ func NewWikiRepository(db *gorm.DB) repoWiki.WikiRepository {
 	return &wikiRepository{db}
 }
 
+func (w *wikiRepository) GetAllWikis() ([]*models.Wikis, error) {
+	var wikis []*models.Wikis
+	err := w.db.Find(&wikis).Error
+	if err != nil {
+		return nil, err
+	}
+	return wikis, nil
+}
+
 func (w *wikiRepository) AddWiki(wiki *models.Wikis) error {
 	return w.db.Create(wiki).Error
 }
 
-func (w *wikiRepository) UpdateTopic(wiki *models.Wikis) error {
+func (w *wikiRepository) UpdateWiki(wiki *models.Wikis) error {
 	return w.db.Save(wiki).Error
 }
 
@@ -61,4 +71,42 @@ func (w *wikiRepository) UpdateDescriptionAndUpdatedAt(id int, description strin
 			"description": description,
 			"updated_at":  now,
 		}).Error
+}
+
+func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
+	wiki, err := w.GetWiki(id)
+	if err != nil {
+		return err
+	}
+
+	// Mengambil paragraf pertama dari Wikipedia
+	doc, err := goquery.NewDocument("https://id.wikipedia.org/wiki/" + wiki.Topic)
+	if err != nil {
+		return err
+	}
+
+	description := doc.Find("p").First().Text()
+
+	// Memperbarui deskripsi jika berbeda
+	if wiki.Description != description || wiki.Description == "" {
+		wiki.Description = description
+		err := w.db.Save(wiki).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// WORKER
+func (w *wikiRepository) UpdateUpdatedAt(id int) error {
+	now := time.Now()
+
+	err := w.db.Model(&models.Wikis{}).Where("id = ?", id).Update("updated_at", now).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
