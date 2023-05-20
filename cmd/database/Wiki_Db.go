@@ -3,6 +3,7 @@ package database
 import (
 	"github.com/PuerkitoBio/goquery"
 	"gorm.io/gorm"
+	"net/http"
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
 	"time"
@@ -55,10 +56,10 @@ func (w *wikiRepository) GetWikisWithEmptyDescription() ([]*models.Wikis, error)
 	return wikis, nil
 }
 
-func (w *wikiRepository) UpdateDescriptionByTopic(topic, description string) error {
-	return w.db.Model(&models.Wikis{}).Where("topic = ?", topic).Update("description", description).Error
-}
-func (w *wikiRepository) UpdateTopic1(id int, newTopic string) error {
+//	func (w *wikiRepository) UpdateDescriptionByTopic(topic, description string) error {
+//		return w.db.Model(&models.Wikis{}).Where("topic = ?", topic).Update("description", description).Error
+//	}
+func (w *wikiRepository) UpdateForWorker(id int, newTopic string) error {
 	return w.db.Model(&models.Wikis{}).Where("id = ?", id).Update("topic", newTopic).Error
 }
 
@@ -79,8 +80,15 @@ func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
 		return err
 	}
 
-	// Mengambil paragraf pertama dari Wikipedia
-	doc, err := goquery.NewDocument("https://id.wikipedia.org/wiki/" + wiki.Topic)
+	// Mengambil halaman Wikipedia
+	res, err := http.Get("https://id.wikipedia.org/wiki/" + wiki.Topic)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	// Membuat dokumen dari respon HTTP
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return err
 	}

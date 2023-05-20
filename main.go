@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "fmt"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"log"
 	database2 "pr_ramadhan/cmd/database"
@@ -68,7 +69,7 @@ func main() {
 	var workerCmd = &cobra.Command{
 		Use:   "worker",
 		Short: "Run the worker for scraping",
-		Run:   handlers.WorkerHandler(database2.NewWikiRepository(Db)),
+		Run:   handlers.WorkerHandler1(database2.NewWikiRepository(Db)),
 	}
 
 	var updateDescByTopic = &cobra.Command{
@@ -97,7 +98,8 @@ func main() {
 	defer func(sqlDb *sql.DB) {
 		err := sqlDb.Close()
 		if err != nil {
-
+			logrus.Info("Error sqlDb")
+			return
 		}
 	}(sqlDb)
 }

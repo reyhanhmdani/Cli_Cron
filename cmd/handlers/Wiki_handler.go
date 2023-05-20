@@ -3,11 +3,9 @@ package handlers
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/go-co-op/gocron"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"net/http"
-	"net/url"
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
 	"strconv"
@@ -214,7 +212,7 @@ func UpdateTopicHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, a
 		}
 
 		// Mengupdate topik
-		err = repo.UpdateTopic1(id, newTopic)
+		err = repo.UpdateForWorker(id, newTopic)
 		if err != nil {
 			fmt.Println("Failed to update topic")
 			return
@@ -244,7 +242,7 @@ func WorkerHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args [
 	return func(cmd *cobra.Command, args []string) {
 		// ...
 		// Query seluruh data dengan deskripsi kosong
-		wikis, err := repo.GetAllWikis()
+		wikis, err := repo.GetWikisWithEmptyDescription()
 		if err != nil {
 			fmt.Println("Failed to get wikis")
 			return
@@ -252,6 +250,7 @@ func WorkerHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args [
 
 		// Looping untuk setiap wiki dengan deskripsi kosong
 		for _, wiki := range wikis {
+			// channel wait group
 			// Mengupdate deskripsi dari Wikipedia
 			err := repo.UpdateDescriptionFromWikipedia(wiki.ID)
 			if err != nil {
@@ -272,96 +271,47 @@ func WorkerHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args [
 		fmt.Println("Worker finished")
 	}
 }
-
 func WorkerHandler1(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		// Menjadwalkan tugas yang akan dijalankan setiap 1 menit
-		s := gocron.NewScheduler(time.UTC)
-		_, err := s.Every(1).Minute().Do(func() {
-			// Mengambil data wiki dengan description kosong dari database
-			wikis, err := repo.GetWikisWithEmptyDescription()
-			if err != nil {
-				fmt.Println("Failed to get data from database")
-				return
-			}
+		// ...
 
-			// Concurrently melakukan http request dan update ke database
-			var wg sync.WaitGroup
-			for _, wiki := range wikis {
-				wg.Add(1)
-				go func(wiki *models.Wikis) {
-					defer wg.Done()
-
-					// Mengakses Wikipedia untuk mendapatkan paragraf pertama
-					paragraph, err := fetchFirstParagraph(wiki.Topic)
-					if err != nil {
-						fmt.Println("Failed to fetch first paragraph:", err)
-						return
-					}
-
-					// Update description dan updated_at di database
-					wiki.Description = paragraph
-					wiki.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
-					err = repo.UpdateWiki(wiki)
-					if err != nil {
-						fmt.Println("Failed to update data in database")
-						return
-					}
-
-					// Menampilkan pesan sukses
-					fmt.Println("Description for topic", wiki.Topic, "has been updated")
-
-					// cek jika semua deskripsi sudah terisi
-					if isAllDescriptionsFilled(repo) {
-						fmt.Println("Semua deskripsi sudah terisi")
-						// menghentikan scheduler nya
-						s.Stop()
-					}
-				}(wiki)
-			}
-
-			wg.Wait()
-		})
+		// Query seluruh data dengan deskripsi kosong
+		wikis, err := repo.GetWikisWithEmptyDescription()
 		if err != nil {
+			fmt.Println("Failed to get wikis")
 			return
 		}
 
-		// Menjalankan scheduler
-		s.StartBlocking()
-	}
-}
+		// Inisialisasi WaitGroup
+		var wg sync.WaitGroup
 
-// Fungsi untuk mengambil paragraf pertama dari Wikipedia
-func fetchFirstParagraph(topic string) (string, error) {
-	nameUrl := "https://id.wikipedia.org/wiki/" + url.PathEscape(topic)
-	resp, err := http.Get(nameUrl)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+		// Looping untuk setiap wiki dengan deskripsi kosong
+		for _, wiki := range wikis {
+			wg.Add(1) // Menambahkan jumlah goroutine yang akan dijalankan
 
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		return "", err
-	}
+			go func(wikiID int) {
+				defer wg.Done() // Mengurangi jumlah goroutine yang sedang berjalan setelah selesai
 
-	paragraph := ""
-	doc.Find("p").Each(func(i int, s *goquery.Selection) {
-		if i == 0 {
-			paragraph = s.Text()
-			return
+				// Mengupdate deskripsi dari Wikipedia
+				err := repo.UpdateDescriptionFromWikipedia(wikiID)
+				if err != nil {
+					fmt.Printf("Failed to update description for wiki ID %d\n", wikiID)
+					return
+				}
+
+				// Mengupdate kolom updated_at
+				err = repo.UpdateUpdatedAt(wikiID)
+				if err != nil {
+					fmt.Printf("Failed to update updated_at for wiki ID %d\n", wikiID)
+				}
+			}(wiki.ID)
 		}
-	})
 
-	return paragraph, nil
-}
+		// Menunggu semua goroutine selesai
+		wg.Wait()
 
-// Fungsi untuk memeriksa apakah semua deskripsi telah terisi
-func isAllDescriptionsFilled(repo repoWiki.WikiRepository) bool {
-	wikis, err := repo.GetWikisWithEmptyDescription()
-	if err != nil {
-		fmt.Println("Failed to get data from database")
-		return false
+		// Cek apakah semua data sudah terisi
+
+		fmt.Println("Worker finished")
 	}
-	return len(wikis) == 0
 }
