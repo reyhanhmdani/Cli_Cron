@@ -183,7 +183,7 @@ func DeleteWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func UpdateTopicHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
+func UpdateTopicDescHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// Meminta pengguna untuk memasukkan ID topik yang akan diupdate
 		prompt := promptui.Prompt{
@@ -219,9 +219,21 @@ func UpdateTopicHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, a
 		}
 
 		// Mengambil paragraf pertama dari Wikipedia
-		doc, err := goquery.NewDocument("https://id.wikipedia.org/wiki/" + newTopic)
+		//doc, err := goquery.NewDocument("https://id.wikipedia.org/wiki/" + newTopic)
+		//if err != nil {
+		//	fmt.Println("Failed to fetch data from Wikipedia")
+		//	return
+		//}
+		res, err := http.Get("https://id.wikipedia.org/wiki/" + newTopic)
 		if err != nil {
-			fmt.Println("Failed to fetch data from Wikipedia")
+			fmt.Println("Gagal mengambil data dari Wikipedia")
+			return
+		}
+		defer res.Body.Close()
+
+		// Membuat dokumen dari respon HTTP
+		doc, err := goquery.NewDocumentFromReader(res.Body)
+		if err != nil {
 			return
 		}
 

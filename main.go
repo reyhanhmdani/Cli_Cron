@@ -75,7 +75,7 @@ func main() {
 	var updateDescByTopic = &cobra.Command{
 		Use:   "UDBT",
 		Short: "Run the Worker for Updating",
-		Run:   handlers.UpdateTopicHandler(database2.NewWikiRepository(Db)),
+		Run:   handlers.UpdateTopicDescHandler(database2.NewWikiRepository(Db)),
 	}
 
 	rootCmd.AddCommand(createCmd)
