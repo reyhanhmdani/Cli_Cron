@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"gorm.io/gorm"
 	"net/http"
@@ -66,7 +67,7 @@ func (w *wikiRepository) UpdateForWorker(id int, newTopic string) error {
 func (w *wikiRepository) UpdateDescriptionAndUpdatedAt(id int, description string) error {
 	loc, err := time.LoadLocation("Asia/Jakarta")
 	if err != nil {
-		// Penanganan kesalahan jika gagal memuat lokasi zona waktu
+		fmt.Println("Failed to load location")
 	}
 	currentTime := time.Now().In(loc)
 
@@ -113,9 +114,13 @@ func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
 
 // WORKER
 func (w *wikiRepository) UpdateUpdatedAt(id int) error {
-	now := time.Now()
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		fmt.Println("Failed to load location")
+	}
+	currentTime := time.Now().In(loc)
 
-	err := w.db.Model(&models.Wikis{}).Where("id = ?", id).Update("updated_at", now).Error
+	err = w.db.Model(&models.Wikis{}).Where("id = ?", id).Update("updated_at", currentTime.Format("2006-01-02 15:04:05")).Error
 	if err != nil {
 		return err
 	}
