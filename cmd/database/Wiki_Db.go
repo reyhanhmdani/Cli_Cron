@@ -17,14 +17,14 @@ func NewWikiRepository(db *gorm.DB) repoWiki.WikiRepository {
 	return &wikiRepository{db}
 }
 
-func (w *wikiRepository) GetAllWikis() ([]*models.Wikis, error) {
-	var wikis []*models.Wikis
-	err := w.db.Find(&wikis).Error
-	if err != nil {
-		return nil, err
-	}
-	return wikis, nil
-}
+//func (w *wikiRepository) GetAllWikis() ([]*models.Wikis, error) {
+//	var wikis []*models.Wikis
+//	err := w.db.Find(&wikis).Error
+//	if err != nil {
+//		return nil, err
+//	}
+//	return wikis, nil
+//}
 
 func (w *wikiRepository) AddWiki(wiki *models.Wikis) error {
 	return w.db.Create(wiki).Error

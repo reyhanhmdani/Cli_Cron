@@ -253,39 +253,6 @@ func UpdateTopicDescHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Comman
 func WorkerHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// ...
-		// Query seluruh data dengan deskripsi kosong
-		wikis, err := repo.GetWikisWithEmptyDescription()
-		if err != nil {
-			fmt.Println("Failed to get wikis")
-			return
-		}
-
-		// Looping untuk setiap wiki dengan deskripsi kosong
-		for _, wiki := range wikis {
-			// channel wait group
-			// Mengupdate deskripsi dari Wikipedia
-			err := repo.UpdateDescriptionFromWikipedia(wiki.ID)
-			if err != nil {
-				fmt.Printf("Failed to update description for wiki ID %d\n", wiki.ID)
-				continue
-			}
-
-			// Mengupdate kolom updated_at
-			err = repo.UpdateUpdatedAt(wiki.ID)
-			if err != nil {
-				fmt.Printf("Failed to update updated_at for wiki ID %d\n", wiki.ID)
-				continue
-			}
-		}
-
-		// Cek apakah semua data sudah terisi
-
-		fmt.Println("Worker finished")
-	}
-}
-func WorkerHandler1(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
-	return func(cmd *cobra.Command, args []string) {
-		// ...
 
 		// Query seluruh data dengan deskripsi kosong
 		wikis, err := repo.GetWikisWithEmptyDescription()

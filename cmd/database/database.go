@@ -41,11 +41,6 @@ func ConnnectDb(cfg *models.Config) (*gorm.DB, error) {
 		panic("Cannot Connect to Database")
 	}
 
-	//err = db.AutoMigrate(&models2.Wikis{})
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	logrus.Info("Success Connect to Database")
 	return db, err
 }

@@ -69,7 +69,7 @@ func main() {
 	var workerCmd = &cobra.Command{
 		Use:   "worker",
 		Short: "Run the worker for scraping",
-		Run:   handlers.WorkerHandler1(database2.NewWikiRepository(Db)),
+		Run:   handlers.WorkerHandler(database2.NewWikiRepository(Db)),
 	}
 
 	var updateDescByTopic = &cobra.Command{
