@@ -64,13 +64,17 @@ func (w *wikiRepository) UpdateForWorker(id int, newTopic string) error {
 }
 
 func (w *wikiRepository) UpdateDescriptionAndUpdatedAt(id int, description string) error {
-	now := time.Now()
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		// Penanganan kesalahan jika gagal memuat lokasi zona waktu
+	}
+	currentTime := time.Now().In(loc)
 
 	return w.db.Model(&models.Wikis{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"description": description,
-			"updated_at":  now,
+			"updated_at":  currentTime.Format("2006-01-02 15:04:05"),
 		}).Error
 }
 

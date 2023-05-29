@@ -90,6 +90,15 @@ func UpdateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 		// Mengupdate topik wiki
 		wiki.Topic = newTopic
 
+		// Mengatur zona waktu yang sesuai
+		loc, err := time.LoadLocation("Asia/Jakarta")
+		if err != nil {
+			fmt.Println("Failed to load location")
+			return
+		}
+		currentTime := time.Now().In(loc)
+		wiki.UpdatedAt = currentTime.Format("2006-01-02 15:04:05")
+
 		// Menyimpan perubahan ke database
 		err = repo.UpdateWiki(wiki)
 		if err != nil {
@@ -218,12 +227,6 @@ func UpdateTopicDescHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Comman
 			return
 		}
 
-		// Mengambil paragraf pertama dari Wikipedia
-		//doc, err := goquery.NewDocument("https://id.wikipedia.org/wiki/" + newTopic)
-		//if err != nil {
-		//	fmt.Println("Failed to fetch data from Wikipedia")
-		//	return
-		//}
 		res, err := http.Get("https://id.wikipedia.org/wiki/" + newTopic)
 		if err != nil {
 			fmt.Println("Gagal mengambil data dari Wikipedia")
