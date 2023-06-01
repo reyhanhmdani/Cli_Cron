@@ -46,11 +46,11 @@ func main() {
 		Run:   handlers.CreateWikiHandler(database.NewWikiRepository(Db)),
 	}
 
-	//var updateCmd = &cobra.Command{
-	//	Use:   "updatetopic",
-	//	Short: "Update a wiki By Id",
-	//	Run:   handlers.UpdateWikiHandler(database.NewWikiRepository(Db)),
-	//}
+	var updateCmd = &cobra.Command{
+		Use:   "updatetopic",
+		Short: "Update a wiki By Id",
+		Run:   handlers.UpdateWikiHandler(database.NewWikiRepository(Db)),
+	}
 
 	var getCmd = &cobra.Command{
 		Use:   "get",
@@ -79,7 +79,7 @@ func main() {
 	}
 
 	rootCmd.AddCommand(createCmd)
-	//rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(deleteCmd)
 	rootCmd.AddCommand(workerCmd)

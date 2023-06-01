@@ -7,7 +7,7 @@ import (
 type WikiRepository interface {
 	//GetAllWikis() ([]*models.Wikis, error)
 	AddWiki(wiki *models.Wikis) error
-	//UpdateWiki(wiki *models.Wikis) error
+	UpdateWiki(wiki *models.Wikis) error
 	DeleteWiki(id int) error
 	GetWiki(id int) (*models.Wikis, error)
 	GetWikisWithEmptyDescription() ([]*models.Wikis, error)
