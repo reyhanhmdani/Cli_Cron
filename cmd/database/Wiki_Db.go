@@ -28,11 +28,8 @@ func NewWikiRepository(db *gorm.DB) repoWiki.WikiRepository {
 //}
 
 func (w *wikiRepository) AddWiki(wiki *models.Wikis) error {
-	return w.db.Create(wiki).Error
-}
-
-func (w *wikiRepository) UpdateWiki(wiki *models.Wikis) error {
-	return w.db.Save(wiki).Error
+	// Exclude the 'updated_at' column from the INSERT statement
+	return w.db.Model(&models.Wikis{}).Omit("updated_at").Create(wiki).Error
 }
 
 func (w *wikiRepository) DeleteWiki(id int) error {
@@ -57,9 +54,6 @@ func (w *wikiRepository) GetWikisWithEmptyDescription() ([]*models.Wikis, error)
 	return wikis, nil
 }
 
-//	func (w *wikiRepository) UpdateDescriptionByTopic(topic, description string) error {
-//		return w.db.Model(&models.Wikis{}).Where("topic = ?", topic).Update("description", description).Error
-//	}
 func (w *wikiRepository) UpdateForWorker(id int, newTopic string) error {
 	return w.db.Model(&models.Wikis{}).Where("id = ?", id).Update("topic", newTopic).Error
 }

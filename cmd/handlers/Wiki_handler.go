@@ -36,7 +36,7 @@ func CreateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 		wiki := models.Wikis{
 			Topic:       topic,
 			CreatedAt:   now,
-			UpdatedAt:   now,
+			UpdatedAt:   time.Time{},
 			Description: "",
 		}
 
@@ -138,7 +138,6 @@ func UpdateTopicDescHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Comman
 			fmt.Println("Invalid ID")
 			return
 		}
-
 		// Meminta pengguna untuk memasukkan topik baru
 		prompt = promptui.Prompt{
 			Label: "Enter the new topic",
@@ -228,62 +227,3 @@ func WorkerHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args [
 }
 
 ///////////////////////////////
-
-//func UpdateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
-//	return func(cmd *cobra.Command, args []string) {
-//		// Meminta pengguna untuk memasukkan ID wiki yang akan diupdate
-//		prompt := promptui.Prompt{
-//			Label: "Wiki ID",
-//		}
-//		idStr, err := prompt.Run()
-//		if err != nil {
-//			fmt.Println("Failed to read input")
-//			return
-//		}
-//
-//		id, err := strconv.Atoi(idStr)
-//		if err != nil {
-//			fmt.Println("Invalid ID")
-//			return
-//		}
-//
-//		// Meminta pengguna untuk memasukkan topik yang baru
-//		prompt = promptui.Prompt{
-//			Label: "New Topic",
-//		}
-//		newTopic, err := prompt.Run()
-//		if err != nil {
-//			fmt.Println("Failed to read input")
-//			return
-//		}
-//
-//		// Mengambil data wiki berdasarkan ID
-//		wiki, err := repo.GetWiki(id)
-//		if err != nil {
-//			fmt.Println("Failed to get data from database")
-//			return
-//		}
-//
-//		// Mengupdate topik wiki
-//		wiki.Topic = newTopic
-//
-//		// Mengatur zona waktu yang sesuai
-//		//loc, err := time.LoadLocation("Asia/Jakarta")
-//		//if err != nil {
-//		//	fmt.Println("Failed to load location")
-//		//	return
-//		//}
-//		currentTime := time.Now().UTC()
-//		wiki.UpdatedAt = currentTime
-//
-//		// Menyimpan perubahan ke database
-//		err = repo.UpdateWiki(wiki)
-//		if err != nil {
-//			fmt.Println("Failed to update data in database")
-//			return
-//		}
-//
-//		// Menampilkan pesan sukses
-//		fmt.Println("Topic wiki dengan ID", id, "berhasil diupdate")
-//	}
-//}
