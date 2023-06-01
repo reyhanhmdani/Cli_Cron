@@ -91,7 +91,7 @@ func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
 	description := doc.Find("p").First().Text()
 
 	// Memperbarui deskripsi jika berbeda
-	if wiki.Description != description || wiki.Description == "" {
+	if wiki.Description != wiki.Topic || wiki.Description == "" {
 		wiki.Description = description
 		err := w.db.Save(wiki).Error
 		if err != nil {
