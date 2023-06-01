@@ -1,9 +1,9 @@
 package database
 
+import "gorm.io/gorm"
+
 import (
-	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"gorm.io/gorm"
 	"net/http"
 	"pr_ramadhan/cmd/models"
 	"pr_ramadhan/repoWiki"
@@ -65,17 +65,13 @@ func (w *wikiRepository) UpdateForWorker(id int, newTopic string) error {
 }
 
 func (w *wikiRepository) UpdateDescriptionAndUpdatedAt(id int, description string) error {
-	loc, err := time.LoadLocation("Asia/Jakarta")
-	if err != nil {
-		fmt.Println("Failed to load location")
-	}
-	currentTime := time.Now().In(loc)
+	currentTime := time.Now().UTC()
 
 	return w.db.Model(&models.Wikis{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"description": description,
-			"updated_at":  currentTime.Format("2006-01-02 15:04:05"),
+			"updated_at":  currentTime,
 		}).Error
 }
 
@@ -114,13 +110,9 @@ func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
 
 // WORKER
 func (w *wikiRepository) UpdateUpdatedAt(id int) error {
-	loc, err := time.LoadLocation("Asia/Jakarta")
-	if err != nil {
-		fmt.Println("Failed to load location")
-	}
-	currentTime := time.Now().In(loc)
+	currentTime := time.Now().UTC()
 
-	err = w.db.Model(&models.Wikis{}).Where("id = ?", id).Update("updated_at", currentTime.Format("2006-01-02 15:04:05")).Error
+	err := w.db.Model(&models.Wikis{}).Where("id = ?", id).Update("updated_at", currentTime).Error
 	if err != nil {
 		return err
 	}
