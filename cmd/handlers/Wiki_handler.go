@@ -13,12 +13,35 @@ import (
 	"time"
 )
 
-// struct ini untuk melakukan scarping paragraf pertama dari Wiki
+// Scrapper ini untuk melakukan scarping paragraf pertama dari Wiki
 type Scrapper struct {
 	Client *http.Client
 }
 
-// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+func GetAlldataWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		// mengambil semua data wikis dari repo
+		wikis, err := repo.GetAllWikis()
+		if err != nil {
+			fmt.Println("Failed to get All data wikis from database")
+			return
+		}
+
+		// Menampilkan semua data ketika benar ..
+
+		// cek apakah wikis kosong
+		if len(wikis) == 0 {
+			fmt.Println("No wikis available")
+			return
+		}
+
+		for _, wikis := range wikis {
+			fmt.Println("All wikis:")
+			fmt.Printf("ID: %d, Topic: %s, Description:%s\n", wikis.ID, wikis.Topic, wikis.Description)
+		}
+	}
+}
+
 func CreateWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// Meminta pengguna untuk menentukan topik

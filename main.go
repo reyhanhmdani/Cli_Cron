@@ -39,7 +39,12 @@ func main() {
 		log.Fatalf("Error running schema migration %v", err)
 	}
 
-	// createCmd represents the `create` command
+	var getAllCmd = &cobra.Command{
+		Use:   "getall",
+		Short: "Get all data",
+		Run:   handlers.GetAlldataWikiHandler(database.NewWikiRepository(Db)),
+	}
+
 	var createCmd = &cobra.Command{
 		Use:   "create",
 		Short: "Create a new wiki entry",
@@ -65,11 +70,12 @@ func main() {
 	}
 
 	var updateDescByTopic = &cobra.Command{
-		Use:   "Update",
+		Use:   "UpdateAndDesc",
 		Short: "Run the Worker for Updating",
 		Run:   handlers.UpdateTopicDescHandler(database.NewWikiRepository(Db)),
 	}
 
+	rootCmd.AddCommand(getAllCmd)
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(deleteCmd)

@@ -18,14 +18,14 @@ func NewWikiRepository(db *gorm.DB) repoWiki.WikiRepository {
 	return &wikiRepository{db}
 }
 
-//func (w *wikiRepository) GetAllWikis() ([]*models.Wikis, error) {
-//	var wikis []*models.Wikis
-//	err := w.db.Find(&wikis).Error
-//	if err != nil {
-//		return nil, err
-//	}
-//	return wikis, nil
-//}
+func (w *wikiRepository) GetAllWikis() ([]*models.Wikis, error) {
+	var wikis []*models.Wikis
+	err := w.db.Find(&wikis).Error
+	if err != nil {
+		return nil, err
+	}
+	return wikis, nil
+}
 
 func (w *wikiRepository) AddWiki(wiki *models.Wikis) error {
 	// Exclude the 'updated_at' column from the INSERT statement
@@ -47,7 +47,7 @@ func (w *wikiRepository) GetWiki(id int) (*models.Wikis, error) {
 
 func (w *wikiRepository) GetWikisWithEmptyDescription() ([]*models.Wikis, error) {
 	var wikis []*models.Wikis
-	err := w.db.Where("description IS NULL OR description = ?", "").Find(&wikis).Error
+	err := w.db.Where("description IS NULL OR description = ? Or description != topic", "").Find(&wikis).Error
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
 		return err
 	}
 
-	description := doc.Find("p").First().Text()
+	description := doc.Find("#mw-content-text p").First().Text()
 
 	// Memperbarui deskripsi jika berbeda
 	if wiki.Description != description || wiki.Description == "" || wiki.Description != wiki.Topic {
