@@ -180,6 +180,7 @@ func UpdateTopicDescHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Comman
 
 		res, err := http.Get("https://id.wikipedia.org/wiki/" + newTopic)
 		if err != nil {
+			fmt.Println(err)
 			fmt.Println("Gagal mengambil data dari Wikipedia")
 			return
 		}
