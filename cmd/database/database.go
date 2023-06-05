@@ -19,10 +19,9 @@ func ConnnectDb(cfg *models.Config) (*gorm.DB, error) {
 
 	fmt.Printf("%+v\n", cfg)
 	//
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.DBUsername,
 		cfg.DBPassword,
-		cfg.DBHost,
 		cfg.DBPort,
 		cfg.DBName,
 	)

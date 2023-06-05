@@ -228,6 +228,7 @@ func WorkerHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args [
 				// Mengupdate deskripsi dari Wikipedia
 				err := repo.UpdateDescriptionFromWikipedia(wikiID)
 				if err != nil {
+					fmt.Println(err)
 					fmt.Printf("Failed to update description for wiki ID %d\n", wikiID)
 					return
 				}

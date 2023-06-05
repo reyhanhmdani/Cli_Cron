@@ -6,18 +6,23 @@ WORKDIR /app
 
 COPY . .
 
-RUN go mod tidy
+RUN go mod download && go mod tidy
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o binary ./
 
-FROM scratch
+FROM alpine
 
 COPY --from=builder /app/binary .
 COPY --from=builder /app/migration/ ./app/migration/
+#COPY cmd/database/ca.crt /etc/ssl/certs/
+
+
+RUN apk add --no-cache ca-certificates
+RUN update-ca-certificates
 
 WORKDIR /app
 
-CMD ["/binary", "getall"]
+CMD ["/binary", "worker"]
 
 
 # sudo docker run -it --network=host my-image:create

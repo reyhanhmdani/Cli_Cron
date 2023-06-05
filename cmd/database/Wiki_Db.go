@@ -1,6 +1,9 @@
 package database
 
-import "gorm.io/gorm"
+import (
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+)
 
 import (
 	"github.com/PuerkitoBio/goquery"
@@ -72,12 +75,44 @@ func (w *wikiRepository) UpdateDescriptionAndUpdatedAt(id int, description strin
 func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
 	wiki, err := w.GetWiki(id)
 	if err != nil {
+		logrus.Error("Error to get Id")
 		return err
 	}
+	//file, err := os.Open("ca.crt") // Menyesuaikan path untuk membaca file ca.crt dari folder utama
+	//if err != nil {
+	//	fmt.Println("Failed to read CA certificate:", err)
+	//	return err
+	//}
+	//
+	//defer func(file *os.File) {
+	//	err := file.Close()
+	//	if err != nil {
+	//	}
+	//}(file)
+	//
+	//caCert, err := io.ReadAll(file)
+	//if err != nil {
+	//	// Handle error
+	//}
+	//
+	//// Buat sertifikat otoritas yang dipercaya
+	//caCertPool := x509.NewCertPool()
+	//caCertPool.AppendCertsFromPEM(caCert)
+
+	// Membuat klien HTTP dengan konfigurasi TLS yang aman
+	//httpClient := &http.Client{
+	//	Transport: &http.Transport{
+	//		TLSClientConfig: &tls.Config{
+	//			InsecureSkipVerify: true, // Menggunakan sertifikat otoritas yang dipercaya
+	//		},
+	//	},
+	//	Timeout: 10 * time.Second, // Atur timeout jika diperlukan
+	//}
 
 	// Mengambil halaman Wikipedia
 	res, err := http.Get("https://id.wikipedia.org/wiki/" + wiki.Topic)
 	if err != nil {
+		logrus.Error("Failed to get Wikipedia to desc")
 		return err
 	}
 	defer res.Body.Close()
@@ -88,7 +123,7 @@ func (w *wikiRepository) UpdateDescriptionFromWikipedia(id int) error {
 		return err
 	}
 
-	description := doc.Find("#mw-content-text p").First().Text()
+	description := doc.Find("p").First().Text()
 
 	// Memperbarui deskripsi jika berbeda
 	if wiki.Description != description || wiki.Description == "" || wiki.Description != wiki.Topic {
