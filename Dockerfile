@@ -22,7 +22,7 @@ RUN update-ca-certificates
 
 WORKDIR /app
 
-CMD ["/binary", "UpdateAndDesc"]
+CMD ["/binary", "delete"]
 
 
 # sudo docker run -it --network=host my-image:create

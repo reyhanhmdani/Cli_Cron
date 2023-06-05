@@ -97,7 +97,7 @@ func GetWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, args 
 		// dapatkan wiki dari repository
 		wiki, err := repo.GetWiki(id)
 		if err != nil {
-			fmt.Println("Failed to get wiki from database")
+			fmt.Println("not Found")
 			return
 		}
 		// tampilkan hasil pencarian ke pengguna
@@ -127,6 +127,12 @@ func DeleteWikiHandler(repo repoWiki.WikiRepository) func(cmd *cobra.Command, ar
 			return
 		}
 
+		// Memeriksa apakah wiki dengan ID yang dimasukkan ada dalam database
+		_, err = repo.GetWiki(id)
+		if err != nil {
+			fmt.Println("Wiki dengan ID", id, "tidak ditemukan")
+			return
+		}
 		// Menghapus wiki dari database
 		err = repo.DeleteWiki(id)
 		if err != nil {
