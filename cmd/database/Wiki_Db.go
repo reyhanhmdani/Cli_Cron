@@ -47,7 +47,7 @@ func (w *wikiRepository) GetWiki(id int) (*models.Wikis, error) {
 
 func (w *wikiRepository) GetWikisWithEmptyDescription() ([]*models.Wikis, error) {
 	var wikis []*models.Wikis
-	err := w.db.Where("description IS NULL OR description = ? Or description != topic", "").Find(&wikis).Error
+	err := w.db.Where("description IS NULL OR description = ''").Find(&wikis).Error
 	if err != nil {
 		return nil, err
 	}
